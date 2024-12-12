@@ -60,7 +60,6 @@ def load_measurement(file_path):
         if line != '':
             split = line.split()
             measurements.append([split[1], split[2], (split[3], split[4])])
-            # measurements = [[line.split()[1], line.split()[2], (line.split()[3], line.split()[4])] for line in lines[3:]]
     return [seq, gt_pose, odom_pose, measurements]
 
 

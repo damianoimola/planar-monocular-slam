@@ -9,5 +9,4 @@ class PlanarMonocularSLAM:
         measurement_data = load_measurement_files()
 
 
-
 PlanarMonocularSLAM()
