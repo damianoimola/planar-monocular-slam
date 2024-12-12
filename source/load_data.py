@@ -1,5 +1,6 @@
 import os
 
+
 def load_camera_file():
     path = '../03-PlanarMonocularSLAM/data/camera.dat'
     with open(path, 'r') as f:
@@ -45,13 +46,33 @@ def load_world_file():
     return world_data
 
 
-def load_measurement_file():
+def load_measurement(file_path):
+    with open(file_path, 'r') as f:
+        lines = [line.strip() for line in f]
+
+    seq = lines[0].split()[1]
+    gt_pose = [lines[1].split()[1], lines[1].split()[2], lines[1].split()[3]]
+    odom_pose = [lines[2].split()[1], lines[2].split()[2], lines[2].split()[3]]
+
+    measurements = []
+    for line in lines[3:]:
+        # some files have last line blank
+        if line != '':
+            split = line.split()
+            measurements.append([split[1], split[2], (split[3], split[4])])
+            # measurements = [[line.split()[1], line.split()[2], (line.split()[3], line.split()[4])] for line in lines[3:]]
+    return [seq, gt_pose, odom_pose, measurements]
+
+
+
+def load_measurement_files():
     data_folder = '../03-PlanarMonocularSLAM/data'
 
     measurements_data = []
     for root, dirs, files in os.walk(data_folder):
         for f in files:
             if f not in ['camera.dat', 'trajectory.dat', 'world.dat']:
-                measurements_data.append(...)
+                measurements_data.append(load_measurement(os.path.join(root, f)))
+    print("### MEASUREMENT FILES LOADED")
     return measurements_data
 

@@ -1,4 +1,4 @@
-from load_data import load_camera_file, load_trajectory_file, load_world_file, load_measurement_file
+from load_data import load_camera_file, load_trajectory_file, load_world_file, load_measurement_files
 
 class PlanarMonocularSLAM:
     def __init__(self):
@@ -6,6 +6,7 @@ class PlanarMonocularSLAM:
         camera_matrix, camera_transformation, z_near, z_far, width, height = load_camera_file()
         trajectory = load_trajectory_file()
         world_data = load_world_file()
+        measurement_data = load_measurement_files()
 
 
 
