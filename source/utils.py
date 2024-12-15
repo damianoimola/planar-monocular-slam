@@ -10,4 +10,4 @@ def back_project(point_2d, camera_matrix):
 
 def transform_ray(ray, ):
     """3D ray (camera frame) to 3D ray (world frame)"""
-    # r_w =
+    return

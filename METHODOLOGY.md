@@ -20,4 +20,8 @@
 The complete pipeline is the following $$(u,v) = \Pi(K\cdot E\cdot P_{world})$$
 
 ## Triangulation
-
+Here the key steps:
+1) Compute the projection matrix for first frame (i.e. $P_1$) $$P_1 = K[R_1|t_1]$$
+2) Compute the projection matrix for second frame (i.e. $P_2$) $$P_2 = K[R_2|t_2]$$
+3) Triangulate using `cv2.triangulatePoints(P1, P2, points1, points2)` and obtaining the 4D point
+4) Retrieve the 3D points by a simple projection
