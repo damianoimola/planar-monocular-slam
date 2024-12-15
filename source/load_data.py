@@ -59,7 +59,21 @@ def load_measurement(file_path):
         # some files have last line blank
         if line != '':
             split = line.split()
+            # [curr_id, actual_id, (point_x, point_y))
             measurements.append([split[1], split[2], (split[3], split[4])])
+
+    """
+        [
+            seq,
+            gt_pose,
+            odom_pose,
+            [
+                1 -> [curr_id, actual_id, (point_x, point_y)],
+                2 -> [curr_id, actual_id, (point_x, point_y)],
+                ...
+            ]
+        ]
+    """
     return [seq, gt_pose, odom_pose, measurements]
 
 
