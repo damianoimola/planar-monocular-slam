@@ -1,23 +1,25 @@
 import os
 
+import numpy as np
+
 
 def load_camera_file():
     path = '../03-PlanarMonocularSLAM/data/camera.dat'
     with open(path, 'r') as f:
         lines = [line.strip() for line in f]
 
-    camera_matrix = [
+    camera_matrix = np.array([
         lines[1].split(),
         lines[2].split(),
         lines[3].split()
-    ]
+    ], dtype=np.float32)
 
-    camera_transformation = [
+    camera_transformation = np.array([
         lines[5].split(),
         lines[6].split(),
         lines[7].split(),
         lines[8].split()
-    ]
+    ], dtype=np.float32)
 
     z_near = lines[9].split()[1]
     z_far = lines[10].split()[1]
