@@ -25,3 +25,6 @@ Here the key steps:
 2) Compute the projection matrix for second frame (i.e. $P_2$) $$P_2 = K[R_2|t_2]$$
 3) Triangulate using `cv2.triangulatePoints(P1, P2, points1, points2)` and obtaining the 4D point
 4) Retrieve the 3D points by a simple projection
+
+
+## Bundle Adjustments

@@ -57,7 +57,6 @@ class PlanarMonocularSLAM:
 
         triangulated_points = []
         for i in range(len(self.trajectory)-1):
-            print("ITER", i)
             # robot pose in world
             current_estimated_pose = self.pose_to_matrix(self.measurement_data[i][1])
             next_estimated_pose = self.pose_to_matrix(self.measurement_data[i+1][1])
@@ -69,6 +68,7 @@ class PlanarMonocularSLAM:
             # triangulate
             points_3d = self.triangulation(pose1, pose2, self.measurement_data[i][3], self.measurement_data[i+1][3])
             triangulated_points.append(points_3d)
+        print("TRIANGULATION DONE")
 
         # TODO: Bundle Adjustment
 
