@@ -2,6 +2,8 @@ import os
 
 import numpy as np
 
+from source.classes import Trajectory
+
 
 def load_camera_file():
     path = '../03-PlanarMonocularSLAM/data/camera.dat'
@@ -34,7 +36,10 @@ def load_trajectory_file():
     path = '../03-PlanarMonocularSLAM/data/trajectory.dat'
     with open(path, 'r') as f:
         lines = [line.strip().split() for line in f]
-        trajectory = [[line[0], (line[1:4]), (line[4:7])] for line in lines]
+
+        trajectory = Trajectory()
+        for line in lines: trajectory.add(line[0], (line[1:4]), (line[4:7]))
+        # trajectory = [[line[0], (line[1:4]), (line[4:7])] for line in lines]
     print("### TRAJECTORY FILE LOADED")
     return trajectory
 

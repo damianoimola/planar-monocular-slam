@@ -52,9 +52,44 @@ class PlanarMonocularSLAM:
         points_3d = points_4d[:3] / points_4d[3]
         return points_3d.T
 
-    def run(self):
-        print("TRAJECTORY LENGTH:", len(self.trajectory))
+    def bundle_adjustment(self, triangulated_points, trajectory):
+        def residuals(params, points_3d, camera_matrix, measurement_data):
+            num_cameras = len(trajectory)
 
+            # as in multi-point registration
+            camera_params = params[:num_cameras * 6].reshape((num_cameras, 6))  # 6 DoF per camera
+            points = params[num_cameras * 6:].reshape((-1, 3))  # remaining are 3D points
+
+            residuals = []
+            for i, (cam_param, cam_measurements) in enumerate(zip(camera_params, measurement_data)):
+                # camera pose from parameters
+                R, _ = cv2.Rodrigues(cam_param[:3])
+                t = cam_param[3:].reshape((3, 1))
+                proj_matrix = camera_matrix @ np.hstack((R, t))
+
+                for id, land, feat in cam_measurements:
+                    # project 3D point into 2D
+                    point_3d = points[id]
+                    point_2d_h = proj_matrix @ np.hstack((point_3d, 1))
+                    point_2d = point_2d_h[:2] / point_2d_h[2]
+                    # reprojection error
+                    residuals.append(point_2d - feat)
+            return np.concatenate(residuals)
+
+        initial_params = np.hstack((np.array(trajectory).T, np.array(triangulated_points).T))
+        result = least_squares(
+            residuals,
+            initial_params,
+            args=(triangulated_points, self.camera_matrix, self.measurement_data),
+            verbose=2
+        )
+        return result.x
+
+
+    def run(self):
+        print("===== TRIANGULATION =====")
+
+        print("TRAJECTORY LENGTH:", len(self.trajectory))
         triangulated_points = []
         for i in range(len(self.trajectory)-1):
             # robot pose in world
@@ -67,10 +102,11 @@ class PlanarMonocularSLAM:
 
             # triangulate
             points_3d = self.triangulation(pose1, pose2, self.measurement_data[i][3], self.measurement_data[i+1][3])
-            triangulated_points.append(points_3d)
-        print("TRIANGULATION DONE")
+            triangulated_points.extend(points_3d)
 
-        # TODO: Bundle Adjustment
+        print("===== BUNDLE ADJUSTMENT =====")
+        refined_params = self.bundle_adjustment(triangulated_points, np.array(self.trajectory.odoms))
+
 
 
 pms = PlanarMonocularSLAM()
