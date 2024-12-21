@@ -9,10 +9,13 @@ class PlanarMonocularSLAM:
     def __init__(self):
         # ===== DATA LOADING =====
         self.camera_matrix, self.camera_transformation, self.z_near, self.z_far, self.width, self.height = load_camera_file()
+
         self.trajectory = load_trajectory_file()
+
         self.world_data = load_world_file()
+
         unordered_measurement_data = load_measurement_files()
-        self.measurement_data = sorted(unordered_measurement_data, key=lambda x:x[0])
+        self.measurement_data = sorted(unordered_measurement_data, key=lambda x:x.seq)
 
     @staticmethod
     def pose_to_matrix(pose):
@@ -35,11 +38,11 @@ class PlanarMonocularSLAM:
         points1 = []
         points2 = []
         # matching points between views
-        for id1, land1, feat1 in samples1:
-            for id2, land2, feat2 in samples2:
-                if id1 == id2:
-                    points1.append(feat1)
-                    points2.append(feat2)
+        for i in range(len(samples1)):
+            for j in range(len(samples2)):
+                if samples1[i].points_id_meas == samples2[j].points_id_meas:
+                    points1.append(samples1[i].point)
+                    points2.append(samples2[i].point)
 
         # Convert to NumPy arrays of shape (N, 2)
         points1 = np.array(points1, dtype=np.float32)
@@ -53,36 +56,60 @@ class PlanarMonocularSLAM:
         return points_3d.T
 
     def bundle_adjustment(self, triangulated_points, trajectory):
-        def residuals(params, points_3d, camera_matrix, measurement_data):
-            num_cameras = len(trajectory)
+        def residuals(params, num_cameras, num_points, camera_matrix, measurement_data):
+            print(params.shape, num_cameras, num_points)
 
-            # as in multi-point registration
-            camera_params = params[:num_cameras * 6].reshape((num_cameras, 6))  # 6 DoF per camera
-            points = params[num_cameras * 6:].reshape((-1, 3))  # remaining are 3D points
+            # Extract camera parameters and 3D points from params
+            camera_params = params[:num_cameras * 3].reshape((num_cameras, 3))
+            points = params[num_cameras * 3:].reshape((num_points, 3))
+            print(camera_params.shape, points.shape)
 
-            residuals = []
-            for i, (cam_param, cam_measurements) in enumerate(zip(camera_params, measurement_data)):
-                # camera pose from parameters
-                R, _ = cv2.Rodrigues(cam_param[:3])
-                t = cam_param[3:].reshape((3, 1))
+            residuals_list = []
+            for cam_index, (cam_param, cam_measurements) in enumerate(zip(camera_params, measurement_data)):
+                cam = self.pose_to_matrix(cam_param)
+
+                # Compute camera pose
+                print(cam_index, cam)
+                R, _ = cv2.Rodrigues(cam[:3, :3])
+                t = cam[:3, 3:].reshape((3, 1))
                 proj_matrix = camera_matrix @ np.hstack((R, t))
 
-                for id, land, feat in cam_measurements:
-                    # project 3D point into 2D
-                    point_3d = points[id]
+                for measurement in cam_measurements:
+                    print(cam_measurements)
+                    # Unpack measurement data
+                    point_id, feature = measurement
+                    point_3d = points[point_id]
+
+                    # Project 3D point to 2D
                     point_2d_h = proj_matrix @ np.hstack((point_3d, 1))
                     point_2d = point_2d_h[:2] / point_2d_h[2]
-                    # reprojection error
-                    residuals.append(point_2d - feat)
-            return np.concatenate(residuals)
 
-        initial_params = np.hstack((np.array(trajectory).T, np.array(triangulated_points).T))
+                    # Compute reprojection error
+                    residuals_list.extend(point_2d - feature)
+
+            return np.array(residuals_list)
+
+        # Number of cameras and points
+        num_cameras = len(trajectory)
+        num_points = len(triangulated_points)
+
+        # Flatten trajectory and triangulated points into initial params
+        trajectory_flattened = np.array(trajectory).reshape(-1)
+        points_flattened = np.array(triangulated_points).reshape(-1)
+        initial_params = np.hstack((trajectory_flattened, points_flattened))
+
+        print(np.array(trajectory).shape, "->", trajectory_flattened.shape)
+        print(np.array(triangulated_points).shape, "->", points_flattened.shape)
+        print(initial_params.shape)
+
+        # Perform least-squares optimization
         result = least_squares(
             residuals,
             initial_params,
-            args=(triangulated_points, self.camera_matrix, self.measurement_data),
+            args=(num_cameras, num_points, self.camera_matrix, self.measurement_data),
             verbose=2
         )
+
         return result.x
 
 
@@ -93,15 +120,15 @@ class PlanarMonocularSLAM:
         triangulated_points = []
         for i in range(len(self.trajectory)-1):
             # robot pose in world
-            current_estimated_pose = self.pose_to_matrix(self.measurement_data[i][1])
-            next_estimated_pose = self.pose_to_matrix(self.measurement_data[i+1][1])
+            current_estimated_pose = self.pose_to_matrix(self.measurement_data[i].odom)
+            next_estimated_pose = self.pose_to_matrix(self.measurement_data[i+1].odom)
 
             # camera pose in world
             pose1 = self.camera_transformation @ current_estimated_pose
             pose2 = self.camera_transformation @ next_estimated_pose
 
             # triangulate
-            points_3d = self.triangulation(pose1, pose2, self.measurement_data[i][3], self.measurement_data[i+1][3])
+            points_3d = self.triangulation(pose1, pose2, self.measurement_data[i].points, self.measurement_data[i+1].points)
             triangulated_points.extend(points_3d)
 
         print("===== BUNDLE ADJUSTMENT =====")

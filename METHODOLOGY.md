@@ -1,5 +1,8 @@
 # Problem analysis
 
+## Planar Monocular SLAM
+It's a mashup of Projective ICP and Multipoint registration: Multipoint Projective SLAM
+
 ## Quick recap
 - Camera matrix: also called Intrinsic matrix, maps 3D points in the camera coordinated to 2D points in the image coordinates $$K = \begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}$$
 - Essential matrix capture relative rotation and translation between two views $$E=[R|t]$$
@@ -18,6 +21,7 @@
 4) HOMOGENEOUS $\rightarrow$ NON-HOMOGENEOUS $$(u,v)= \left(\frac{x}{z}, \frac{y}{z} \right) = \Pi(P_{image})$$
 
 The complete pipeline is the following $$(u,v) = \Pi(K\cdot E\cdot P_{world})$$
+
 
 ## Triangulation
 Here the key steps:

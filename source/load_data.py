@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-from source.classes import Trajectory
+from source.classes import Trajectory, Measurement, SinglePoint
 
 
 def load_camera_file():
@@ -57,18 +57,17 @@ def load_measurement(file_path):
     with open(file_path, 'r') as f:
         lines = [line.strip() for line in f]
 
-    seq = lines[0].split()[1]
+    seq = int(lines[0].split()[1])
     gt_pose = [lines[1].split()[1], lines[1].split()[2], lines[1].split()[3]]
     odom_pose = [lines[2].split()[1], lines[2].split()[2], lines[2].split()[3]]
 
-    measurements = []
+    points = []
     for line in lines[3:]:
         # some files have last line blank
         if line != '':
             split = line.split()
             # [curr_id, actual_id, (point_x, point_y))
-            measurements.append([split[1], split[2], (split[3], split[4])])
-
+            points.append(SinglePoint(split[1], split[2], (split[3], split[4])))
     """
         [
             seq,
@@ -81,7 +80,7 @@ def load_measurement(file_path):
             ]
         ]
     """
-    return [seq, gt_pose, odom_pose, measurements]
+    return Measurement(seq, gt_pose, odom_pose, points)
 
 
 
