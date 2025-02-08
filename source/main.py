@@ -35,21 +35,22 @@ class PlanarMonocularSLAM:
         proj1 = np.array(self.camera_matrix, dtype=np.float64) @ pose1[:3, :]  # Extract 3x4 from 4x4
         proj2 = np.array(self.camera_matrix, dtype=np.float64) @ pose2[:3, :]  # Extract 3x4 from 4x4
 
-        points1 = []
-        points2 = []
+        matched_points1 = []
+        matched_points2 = []
         # matching points between views
         for i in range(len(samples1)):
             for j in range(len(samples2)):
                 if samples1[i].points_id_meas == samples2[j].points_id_meas:
-                    points1.append(samples1[i].point)
-                    points2.append(samples2[i].point)
+                    matched_points1.append(samples1[i].point)
+                    # matched_points2.append(samples2[i].point)
+                    matched_points2.append(samples2[j].point)
 
         # Convert to NumPy arrays of shape (N, 2)
-        points1 = np.array(points1, dtype=np.float32)
-        points2 = np.array(points2, dtype=np.float32)
+        matched_points1 = np.array(matched_points1, dtype=np.float32)
+        matched_points2 = np.array(matched_points2, dtype=np.float32)
 
         # real triangulation
-        points_4d = cv2.triangulatePoints(proj1, proj2, points1.T, points2.T)
+        points_4d = cv2.triangulatePoints(proj1, proj2, matched_points1.T, matched_points2.T)
 
         # projection
         points_3d = points_4d[:3] / points_4d[3]
@@ -57,28 +58,38 @@ class PlanarMonocularSLAM:
 
     def bundle_adjustment(self, triangulated_points, trajectory):
         def residuals(params, num_cameras, num_points, camera_matrix, measurement_data):
-            print(params.shape, num_cameras, num_points)
+            # print("### RESIDUALS")
+            # print(params.shape, num_cameras, num_points)
 
             # Extract camera parameters and 3D points from params
             camera_params = params[:num_cameras * 3].reshape((num_cameras, 3))
             points = params[num_cameras * 3:].reshape((num_points, 3))
-            print(camera_params.shape, points.shape)
+            # print(camera_params.shape, points.shape)
 
             residuals_list = []
             for cam_index, (cam_param, cam_measurements) in enumerate(zip(camera_params, measurement_data)):
+                # print(cam_index)
                 cam = self.pose_to_matrix(cam_param)
 
                 # Compute camera pose
-                print(cam_index, cam)
-                R, _ = cv2.Rodrigues(cam[:3, :3])
+                # print("cam", cam)
+                # R, _ = cv2.Rodrigues(cam[:3, :3])
+                R = cam[:3, :3]
                 t = cam[:3, 3:].reshape((3, 1))
+                # print("R", R)
+                # print("t", t)
+                # print("CAMERA MATRIX", camera_matrix)
+                # print(np.hstack((R, t)))
                 proj_matrix = camera_matrix @ np.hstack((R, t))
+                # print("PROJ", proj_matrix)
 
                 for measurement in cam_measurements:
-                    print(cam_measurements)
+                    # print("MEAS", measurement)
                     # Unpack measurement data
                     point_id, feature = measurement
                     point_3d = points[point_id]
+
+                    # print(np.hstack((point_3d, 1)))
 
                     # Project 3D point to 2D
                     point_2d_h = proj_matrix @ np.hstack((point_3d, 1))
@@ -98,8 +109,11 @@ class PlanarMonocularSLAM:
         points_flattened = np.array(triangulated_points).reshape(-1)
         initial_params = np.hstack((trajectory_flattened, points_flattened))
 
+        # (200, 3) -> (600,)
         print(np.array(trajectory).shape, "->", trajectory_flattened.shape)
+        # (19159, 3) -> (57477,)
         print(np.array(triangulated_points).shape, "->", points_flattened.shape)
+        # (58077,) = (600,) + (57477,)
         print(initial_params.shape)
 
         # Perform least-squares optimization
@@ -123,12 +137,16 @@ class PlanarMonocularSLAM:
             current_estimated_pose = self.pose_to_matrix(self.measurement_data[i].odom)
             next_estimated_pose = self.pose_to_matrix(self.measurement_data[i+1].odom)
 
+            # measured points
+            current_points = self.measurement_data[i].points
+            next_points = self.measurement_data[i+1].points
+
             # camera pose in world
             pose1 = self.camera_transformation @ current_estimated_pose
             pose2 = self.camera_transformation @ next_estimated_pose
 
             # triangulate
-            points_3d = self.triangulation(pose1, pose2, self.measurement_data[i].points, self.measurement_data[i+1].points)
+            points_3d = self.triangulation(pose1, pose2, current_points, next_points)
             triangulated_points.extend(points_3d)
 
         print("===== BUNDLE ADJUSTMENT =====")
