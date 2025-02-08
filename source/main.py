@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 from scipy.optimize import least_squares
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
 
 from load_data import load_camera_file, load_trajectory_file, load_world_file, load_measurement_files
 
@@ -29,6 +31,85 @@ class PlanarMonocularSLAM:
             [0, 0, 1, 0],
             [0, 0, 0, 1],
         ], dtype=np.float32)
+
+    def plot_results(self, triangulated_points, trajectory_odom, gt_trajectory, refined_params=None):
+        """
+        Plot:
+         - 3D scatter of triangulated points with camera positions.
+         - 2D robot trajectory.
+         - (Optional) Reprojection comparison for a chosen camera.
+        """
+        # Convert inputs to arrays.
+        triangulated_points = np.array(triangulated_points)
+        trajectory_odom = np.array(trajectory_odom)
+
+        # Compute camera positions (apply the camera extrinsics).
+        camera_positions_odoms = []
+        odoms = []
+        for pose in trajectory_odom:
+            odoms.append(self.pose_to_matrix(pose)[:3, 3])
+            T = self.pose_to_matrix(pose)
+            T_cam = self.camera_transformation @ T
+            camera_positions_odoms.append(T_cam[:3, 3])
+        camera_positions_odoms = np.array(camera_positions_odoms)
+        odoms = np.array(odoms)
+
+
+        camera_positions_gts = []
+        gts = []
+        for pose in gt_trajectory:
+            gts.append(self.pose_to_matrix(pose)[:3, 3])
+            T = self.pose_to_matrix(pose)
+            T_cam = self.camera_transformation @ T
+            camera_positions_gts.append(T_cam[:3, 3])
+        camera_positions_gts = np.array(camera_positions_gts)
+        gts = np.array(gts)
+
+
+
+        fig = plt.figure(figsize=(5, 15), dpi=500)
+
+        # ===== TRAJECTORY =====
+        ax1 = fig.add_subplot(311, projection='3d')
+        ax1.scatter(odoms[:, 0], odoms[:, 1], odoms[:, 2], s=20, c='red', marker='^', label='Camera Poses (odom)')
+        ax1.scatter(gts[:, 0], gts[:, 1], gts[:, 2], s=20, c='blue', marker='^', label='Camera Poses (gts)')
+        ax1.set_title("3D Camera Poses")
+        ax1.set_xlabel("X")
+        ax1.set_ylabel("Y")
+        ax1.set_zlabel("Z")
+        ax1.legend()
+
+        # ===== POINTS =====
+        ax2 = fig.add_subplot(312, projection='3d')
+        ax2.scatter(camera_positions_odoms[:, 0], camera_positions_odoms[:, 1], camera_positions_odoms[:, 2], s=20, c='red', marker='^', label='Camera Poses (odom)')
+        ax2.scatter(camera_positions_gts[:, 0], camera_positions_gts[:, 1], camera_positions_gts[:, 2], s=20, c='blue', marker='^', label='Camera Poses (gts)')
+        ax2.set_title("3D Points")
+        ax2.set_xlabel("X")
+        ax2.set_ylabel("Y")
+        ax2.set_zlabel("Z")
+        ax2.legend()
+
+        # ===== POINTS =====
+        ax3 = fig.add_subplot(313, projection='3d')
+        ax3.scatter(triangulated_points[:, 0], triangulated_points[:, 1], triangulated_points[:, 2], s=3, c='blue', label='Triangulated Points')
+        ax3.set_title("3D Points")
+        ax3.set_xlabel("X")
+        ax3.set_ylabel("Y")
+        ax3.set_zlabel("Z")
+        ax3.legend()
+
+
+        # ax2 = fig.add_subplot(212)
+        # # ax2.plot(trajectory[:, 0], trajectory[:, 1], 'r-o', label='Trajectory')
+        # ax2.scatter(trajectory[:, 0], trajectory[:, 1], s=1, c='blue', label='Trajectory')
+        # ax2.set_title("2D Robot Trajectory")
+        # ax2.set_xlabel("X")
+        # ax2.set_ylabel("Y")
+        # ax2.legend()
+
+
+        plt.tight_layout()
+        plt.show()
 
     def triangulation(self, pose1, pose2, samples1, samples2):
         # projection matrices
@@ -148,9 +229,10 @@ class PlanarMonocularSLAM:
             # triangulate
             points_3d = self.triangulation(pose1, pose2, current_points, next_points)
             triangulated_points.extend(points_3d)
+        self.plot_results(triangulated_points, self.trajectory.odoms, self.trajectory.gts)
 
         print("===== BUNDLE ADJUSTMENT =====")
-        refined_params = self.bundle_adjustment(triangulated_points, np.array(self.trajectory.odoms))
+        # refined_params = self.bundle_adjustment(triangulated_points, np.array(self.trajectory.odoms))
 
 
 
