@@ -31,4 +31,4 @@ Here the key steps:
 4) Retrieve the 3D points by a simple projection
 
 
-## Bundle Adjustments
+## Bundle Adjustment
