@@ -23,10 +23,10 @@ def load_camera_file():
         lines[8].split()
     ], dtype=np.float32)
 
-    z_near = lines[9].split()[1]
-    z_far = lines[10].split()[1]
-    width = lines[11].split()[1]
-    height = lines[12].split()[1]
+    z_near = int(lines[9].split()[1])
+    z_far = int(lines[10].split()[1])
+    width = int(lines[11].split()[1])
+    height = int(lines[12].split()[1])
 
     print("### CAMERA FILE LOADED")
     return camera_matrix, camera_transformation, z_near, z_far, width, height
@@ -67,7 +67,7 @@ def load_measurement(file_path):
         if line != '':
             split = line.split()
             # [curr_id, actual_id, (point_x, point_y))
-            points.append(SinglePoint(split[1], split[2], (split[3], split[4])))
+            points.append(SinglePoint(split[1], int(split[2]), (float(split[3]), float(split[4]))))
     """
         [
             seq,

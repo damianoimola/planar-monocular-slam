@@ -19,14 +19,17 @@ class Trajectory:
 
 
 class SinglePoint:
-    points_id_meas = None
+    sequential_number = None
     points_id_actual = None
     point = None
 
-    def __init__(self, points_id_meas, points_id_actual, point):
-        self.points_id_meas = int(points_id_meas)
+    def __init__(self, sequential_number, points_id_actual, point):
+        self.sequential_number = int(sequential_number)
         self.points_id_actual = int(points_id_actual)
         self.point = (float(point[0]), float(point[1]))
+
+    def get_id_and_point(self):
+        return self.points_id_actual, self.point
 
 class Measurement:
     seq = None
@@ -43,14 +46,13 @@ class Measurement:
     def __len__(self):
         return len(self.points)
 
-    def get_point(self, seq):
-        return self.points[seq]
-
     def get_points(self):
         return self.points
 
-    # to make it iterable
-    def __iter__(self):
-        for p in self.points:
-            yield p.points_id_actual, p.point
-            # yield p.points_id_meas, p.point
+    def get_ids_and_points(self):
+        temp_list = [point.get_id_and_point() for point in self.points]
+
+        ids = [item[0] for item in temp_list]
+        points = [item[1] for item in temp_list]
+
+        return ids, points
