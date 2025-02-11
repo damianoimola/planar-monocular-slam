@@ -9,19 +9,22 @@ from bundle_adjustment_indices import landmark_matrix_index, pose_matrix_index
 
 
 def box_plus(XR, XL, dx, num_poses, num_landmarks, pose_dim, landmark_dim):
+    XR_copy = XR.copy()
+    XL_copy = XL.copy()
+
     # as in slides of multi-point registration
     for pose_index in range(num_poses):
         pose_matrix_idx = pose_matrix_index(pose_index, pose_dim, num_poses)
         dxr = dx[pose_matrix_idx:pose_matrix_idx + pose_dim]
-        XR[:, :, pose_index] = v2t(dxr) @ XR[:, :, pose_index]
+        XR_copy[:, :, pose_index] = v2t(dxr) @ XR[:, :, pose_index]
 
     for landmark_index in range(num_landmarks):
         landmark_matrix_idx = landmark_matrix_index(landmark_index, pose_dim, landmark_dim, num_poses, num_landmarks)
         dxl = dx[landmark_matrix_idx:landmark_matrix_idx + landmark_dim]
         # XL[:, [landmark_index]] += dxl
-        XL[:, landmark_index] += dxl
+        XL_copy[:, landmark_index] += dxl
 
-    return XR, XL
+    return XR_copy, XL_copy
 
 
 
@@ -38,6 +41,8 @@ def do_bundle_adjustment(XR, XL, Zp, projection_associations,
 
     system_size = pose_dim * num_poses + landmark_dim * num_landmarks
     for iteration in range(num_iterations):
+        print("# ITERATION", iteration)
+
         H = np.zeros((system_size, system_size))
         b = np.zeros(system_size)
 

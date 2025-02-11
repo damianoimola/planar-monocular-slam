@@ -72,12 +72,15 @@ def build_linear_system_projections(XR, XL, Zp, associations, kernel_threshold, 
 
     associations = associations.astype(np.int32)
 
+
     for measurement_num in range(Zp.shape[1]):
         pose_index = associations[0, measurement_num]
         landmark_index = associations[1, measurement_num]-1
         z = Zp[:, measurement_num]
         Xr = XR[:, :, pose_index]
         Xl = XL[:, landmark_index]
+
+        # print("Xl", Xl)
 
         is_valid, e, Jr, Jl = projection_error_and_jacobian(Xr, Xl, z, K, camera_transformation, z_near, z_far, image_rows, image_cols)
         if not is_valid:
@@ -112,7 +115,5 @@ def build_linear_system_projections(XR, XL, Zp, associations, kernel_threshold, 
         # ===== b VECTOR =====
         b[pose_matrix_idx:pose_matrix_idx + pose_dim] += Jr.T @ e
         b[landmark_matrix_idx:landmark_matrix_idx + landmark_dim] += Jl.T @ e
-
-        break
 
     return H, b, chi_tot, num_inliers

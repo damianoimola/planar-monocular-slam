@@ -33,7 +33,7 @@ class PlanarMonocularSLAM:
 
 
         # ===== WORLD FILE (GT LANDMARKS) =====
-        self.XL_true = np.array(load_world_file()).squeeze(1)#.transpose()
+        self.XL_true = np.array(load_world_file()).squeeze(1).transpose()
 
         # ===== MEASUREMENTS =====
         # === pose-pose measurements
@@ -126,13 +126,14 @@ class PlanarMonocularSLAM:
             self.K, self.camera_transformation, self.z_near, self.z_far, self.image_rows, self.image_cols)
 
 
-        print(self.chi_stats_p.shape, self.num_inliers_p.shape, self.chi_stats_r.shape, self.num_inliers_r.shape)
-        print(self.chi_stats_p, self.num_inliers_p, self.chi_stats_r, self.num_inliers_r)
-
         self.chi_stats_p = self.chi_stats_p.squeeze()
         self.num_inliers_p = self.num_inliers_p.squeeze()
         self.chi_stats_r = self.chi_stats_r.squeeze()
         self.num_inliers_r = self.num_inliers_r.squeeze()
+
+        print(self.chi_stats_p.shape, self.num_inliers_p.shape, self.chi_stats_r.shape, self.num_inliers_r.shape)
+        print(self.chi_stats_p, self.num_inliers_p, self.chi_stats_r, self.num_inliers_r)
+
 
 
         print("===== PLOTTING =====")
