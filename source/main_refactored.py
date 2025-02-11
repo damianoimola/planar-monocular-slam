@@ -34,9 +34,6 @@ class PlanarMonocularSLAM:
 
         # ===== WORLD FILE (GT LANDMARKS) =====
         self.XL_true = np.array(load_world_file()).squeeze(1)#.transpose()
-        print(self.XL_true.shape)
-
-        # return
 
         # ===== MEASUREMENTS =====
         # === pose-pose measurements
