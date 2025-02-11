@@ -2,20 +2,20 @@ import numpy as np
 
 
 
-def getCameraPose(XR, cam_pose):
+def get_camera_pose(XR, cam_pose):
     X_cam = np.eye(4)
     X_cam[:2, :2] = XR[:2, :2]
     X_cam[:2, 3] = XR[:2, 2]
     return X_cam @ cam_pose
 
 
-def directionFromImgCoordinates(img_coord, invK):
+def direction_from_img_coordinates(img_coord, invK):
     img_coord = np.append(img_coord, 1)  # Convert to homogeneous coordinates
     d = invK @ img_coord
     return d / np.linalg.norm(d)
 
 
-def triangulateMultipleViews(points, directions):
+def triangulate_multiple_views(points, directions):
     A = np.zeros((3, 3))
     B = np.zeros((3, 1))
 
@@ -50,7 +50,7 @@ def initialize_landmarks(XR_guess, Zp, projection_associations, id_landmarks, ca
     new_projection_associations = new_projection_associations.astype(np.float32)
 
     # get all camera poses in world coordinates
-    X_CAM = np.array([getCameraPose(XR_guess[:, :, i], cam_pose) for i in range(num_poses)])
+    X_CAM = np.array([get_camera_pose(XR_guess[:, :, i], cam_pose) for i in range(num_poses)])
 
     new_id_landmarks = []
     XL_guess = []
@@ -72,9 +72,9 @@ def initialize_landmarks(XR_guess, Zp, projection_associations, id_landmarks, ca
         for current_pose in range(len(poses)):
             points.append(X_CAM[poses[current_pose], :3, 3])
             R = X_CAM[poses[current_pose], :3, :3]
-            directions.append(R @ directionFromImgCoordinates(projections[:, current_pose], invK))
+            directions.append(R @ direction_from_img_coordinates(projections[:, current_pose], invK))
 
-        XL_guess.append(triangulateMultipleViews(np.array(points).T, np.array(directions).T))
+        XL_guess.append(triangulate_multiple_views(np.array(points).T, np.array(directions).T))
         new_id_landmarks.append(id_landmarks[current_landmark])
         new_projection_associations[1, idx] = len(new_id_landmarks)
 
