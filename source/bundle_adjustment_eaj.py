@@ -3,6 +3,7 @@
 
 import numpy as np
 
+from utils import *
 
 def pose_error_and_jacobian(Xi, Xj, Z, R0):
     Ri = Xi[:2, :2]
@@ -16,21 +17,22 @@ def pose_error_and_jacobian(Xi, Xj, Z, R0):
     Jj = np.zeros((6, 3))
 
     Jj[4:6, :2] = Ri_transposed
-    Jj[:4, 2] = Ri_transposed @ R0 @ Rj.T.flatten()
+    Jj[:4, 2] = (Ri_transposed @ R0 @ Rj.T).flatten()
+    # Jj[:4, 2] = Ri_transposed @ R0 @ Rj.T.flatten()
     Jj[4:6, 2] = -Ri_transposed @ R0 @ tj
     Ji = -Jj
 
     Z_hat = np.eye(3)
     Z_hat[:2, :2] = Ri_transposed @ Rj
     Z_hat[:2, 2] = Ri_transposed @ tij
-    e = (Z_hat - Z).flatten()
+    # e = (Z_hat - Z).flatten()
+    e=flatten_matrix_by_columns(Z_hat-Z)
 
     return e, Ji, Jj
 
 
 
 def projection_error_and_jacobian(Xr, Xl, z, K, camera_transformation, z_near, z_far, image_rows, image_cols):
-
     is_valid = False
     e = np.zeros(2)
     Jr = np.zeros((2, 3))

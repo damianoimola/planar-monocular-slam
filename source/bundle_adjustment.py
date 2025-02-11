@@ -10,18 +10,16 @@ from bundle_adjustment_indices import landmark_matrix_index, pose_matrix_index
 
 def box_plus(XR, XL, dx, num_poses, num_landmarks, pose_dim, landmark_dim):
     # as in slides of multi-point registration
-    print(num_poses)
     for pose_index in range(num_poses):
-        pose_matrix_idx = pose_matrix_index(pose_index, num_poses, num_landmarks)
-        print(dx.shape, pose_matrix_idx, pose_dim)
+        pose_matrix_idx = pose_matrix_index(pose_index, pose_dim, num_poses)
         dxr = dx[pose_matrix_idx:pose_matrix_idx + pose_dim]
-        print(dxr)
         XR[:, :, pose_index] = v2t(dxr) @ XR[:, :, pose_index]
 
     for landmark_index in range(num_landmarks):
-        landmark_matrix_idx = landmark_matrix_index(landmark_index, num_poses, num_landmarks)
-        dxl = dx[landmark_matrix_idx:landmark_matrix_idx + landmark_dim, :]
-        XL[:, [landmark_index]] += dxl
+        landmark_matrix_idx = landmark_matrix_index(landmark_index, pose_dim, landmark_dim, num_poses, num_landmarks)
+        dxl = dx[landmark_matrix_idx:landmark_matrix_idx + landmark_dim]
+        # XL[:, [landmark_index]] += dxl
+        XL[:, landmark_index] += dxl
 
     return XR, XL
 
@@ -33,15 +31,12 @@ def do_bundle_adjustment(XR, XL, Zp, projection_associations,
                          Zr, num_iterations, damping, kernel_threshold,
                          block_poses, num_poses, num_landmarks, pose_dim, landmark_dim,
                          K, camera_transformation, z_near, z_far, image_rows, image_cols):
-    # global num_poses, num_landmarks, pose_dim, landmark_dim
-
     chi_stats_p = np.zeros((1, num_iterations))
     num_inliers_p = np.zeros((1, num_iterations))
     chi_stats_r = np.zeros((1, num_iterations))
     num_inliers_r = np.zeros((1, num_iterations))
 
     system_size = pose_dim * num_poses + landmark_dim * num_landmarks
-    print("SYSTEM SIZE", system_size, pose_dim, num_poses, landmark_dim, num_landmarks)
     for iteration in range(num_iterations):
         H = np.zeros((system_size, system_size))
         b = np.zeros(system_size)
@@ -50,10 +45,9 @@ def do_bundle_adjustment(XR, XL, Zp, projection_associations,
         H_projections, b_projections, chi_, num_inliers_ = build_linear_system_projections(XR, XL, Zp, projection_associations, kernel_threshold,
                                                                                            num_poses, num_landmarks, pose_dim, landmark_dim,
                                                                                            K, camera_transformation, z_near, z_far, image_rows, image_cols)
-        print("H MAT", H_projections.shape, H.shape)
-        print("b VEC", b_projections.shape, b.shape)
-        chi_stats_p[iteration] += chi_
-        num_inliers_p[iteration] = num_inliers_
+
+        chi_stats_p[:, iteration] += chi_
+        num_inliers_p[:, iteration] = num_inliers_
         H += H_projections
         b += b_projections
 
@@ -61,8 +55,8 @@ def do_bundle_adjustment(XR, XL, Zp, projection_associations,
             # ===== LINEARIZE PROJECTIONS =====
             H_poses, b_poses, chi_, num_inliers_ = build_linear_system_poses(XR, XL, Zr, kernel_threshold,
                                                                              num_poses, num_landmarks, pose_dim, landmark_dim)
-            chi_stats_r[iteration] += chi_
-            num_inliers_r[iteration] = num_inliers_
+            chi_stats_r[:, iteration] += chi_
+            num_inliers_r[:, iteration] = num_inliers_
             H += H_poses
             b += b_poses
 
@@ -74,8 +68,6 @@ def do_bundle_adjustment(XR, XL, Zp, projection_associations,
                                                          b[pose_dim * num_poses:])
         else:
             dx[pose_dim:] = -np.linalg.solve(H[pose_dim:, pose_dim:], b[pose_dim:])
-
-        print("THINGS", XR.shape, dx.shape, XL.shape, num_poses, num_landmarks, pose_dim, landmark_dim)
 
         XR, XL = box_plus(XR, XL, dx, num_poses, num_landmarks, pose_dim, landmark_dim)
 

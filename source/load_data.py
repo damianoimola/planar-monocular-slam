@@ -49,7 +49,7 @@ def load_world_file():
     with open(path, 'r') as f:
         lines = [line.strip().split() for line in f]
         # line[1:4]
-        world_data = [[int(line[0]), (float(line[1]), float(line[2]), float(line[3]))] for line in lines]
+        world_data = [[(float(line[1]), float(line[2]), float(line[3]))] for line in lines]
     print("### WORLD FILE LOADED")
     return world_data
 

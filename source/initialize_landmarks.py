@@ -55,9 +55,6 @@ def initialize_landmarks(XR_guess, Zp, projection_associations, id_landmarks, ca
     new_id_landmarks = []
     XL_guess = []
 
-
-    print(new_projection_associations.shape, X_CAM.shape)
-
     for current_landmark in range(num_landmarks):
         # Select only the poses and projections relevant to the current landmark
         idx = np.where(projection_associations[1, :] == id_landmarks[current_landmark])[0]

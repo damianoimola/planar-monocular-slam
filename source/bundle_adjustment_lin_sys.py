@@ -24,7 +24,9 @@ def build_linear_system_poses(XR, XL, Zr, kernel_threshold, num_poses, num_landm
         Xi = XR[:, :, measurement_num]
         Xj = XR[:, :, measurement_num + 1]
 
-        e, Ji, Jj = pose_error_and_jacobian(Xi, Xj, Z)
+        R0 = np.array([[0, -1], [1, 0]])
+
+        e, Ji, Jj = pose_error_and_jacobian(Xi, Xj, Z, R0)
         chi = e.T @ Omega @ e
 
         if chi > kernel_threshold:
@@ -35,8 +37,8 @@ def build_linear_system_poses(XR, XL, Zr, kernel_threshold, num_poses, num_landm
 
         chi_tot += chi
 
-        pose_i_matrix_index = pose_matrix_index(measurement_num)
-        pose_j_matrix_index = pose_matrix_index(measurement_num + 1)
+        pose_i_matrix_index = pose_matrix_index(measurement_num, pose_dim, num_poses)
+        pose_j_matrix_index = pose_matrix_index(measurement_num+1, pose_dim, num_poses)
 
         # ===== H MATRIX =====
         H[pose_i_matrix_index:pose_i_matrix_index + pose_dim,
@@ -70,15 +72,9 @@ def build_linear_system_projections(XR, XL, Zp, associations, kernel_threshold, 
 
     associations = associations.astype(np.int32)
 
-    print("Zp associations XR XL", Zp.shape, associations.shape, XR.shape, XL.shape)
-    print("MIN MAX", min(associations[0, :]), max(associations[0, :]))
-    print("MIN MAX", min(associations[1, :]), max(associations[1, :]))
-
     for measurement_num in range(Zp.shape[1]):
         pose_index = associations[0, measurement_num]
-        landmark_index = associations[1, measurement_num] -1
-        # landmark_index = associations[1, measurement_num]
-        # print(pose_index, landmark_index)
+        landmark_index = associations[1, measurement_num]-1
         z = Zp[:, measurement_num]
         Xr = XR[:, :, pose_index]
         Xl = XL[:, landmark_index]
@@ -86,6 +82,7 @@ def build_linear_system_projections(XR, XL, Zp, associations, kernel_threshold, 
         is_valid, e, Jr, Jl = projection_error_and_jacobian(Xr, Xl, z, K, camera_transformation, z_near, z_far, image_rows, image_cols)
         if not is_valid:
             continue
+
 
         chi = e.T @ e
         if chi > kernel_threshold:
@@ -100,16 +97,6 @@ def build_linear_system_projections(XR, XL, Zp, associations, kernel_threshold, 
         landmark_matrix_idx = landmark_matrix_index(landmark_index, pose_dim, landmark_dim, num_poses, num_landmarks)
 
         # ===== H MATRIX =====
-        # print(pose_index, pose_dim)
-        # print(pose_matrix_idx, pose_dim)
-        # print(H[pose_matrix_idx:pose_matrix_idx + pose_dim,
-        #       pose_matrix_idx:pose_matrix_idx + pose_dim].shape)
-        # print((Jr.T @ Jr).shape)
-        print(landmark_index, landmark_matrix_idx, num_landmarks)
-        print(H[pose_matrix_idx:pose_matrix_idx + pose_dim,
-        landmark_matrix_idx:landmark_matrix_idx + landmark_dim].shape)
-        print((Jr.T @ Jl).shape)
-
         H[pose_matrix_idx:pose_matrix_idx + pose_dim,
         pose_matrix_idx:pose_matrix_idx + pose_dim] += Jr.T @ Jr
 
@@ -125,5 +112,7 @@ def build_linear_system_projections(XR, XL, Zp, associations, kernel_threshold, 
         # ===== b VECTOR =====
         b[pose_matrix_idx:pose_matrix_idx + pose_dim] += Jr.T @ e
         b[landmark_matrix_idx:landmark_matrix_idx + landmark_dim] += Jl.T @ e
+
+        break
 
     return H, b, chi_tot, num_inliers

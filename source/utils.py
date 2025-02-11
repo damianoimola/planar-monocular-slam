@@ -9,9 +9,6 @@ def v2t(v):
                   [0,  0,  1]])
     return M
 
-# Global variable equivalent to MATLAB's global R0
-R0 = np.array([[0, -1], [1,  0]])
-
 def flatten_matrix_by_columns(M):
     # 3x3 homogeneous transformation matrix to 6d-vector
     v = np.zeros(6)
