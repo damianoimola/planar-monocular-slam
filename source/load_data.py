@@ -48,7 +48,8 @@ def load_world_file():
     path = '../03-PlanarMonocularSLAM/data/world.dat'
     with open(path, 'r') as f:
         lines = [line.strip().split() for line in f]
-        world_data = [[line[0], (line[1:4])] for line in lines]
+        # line[1:4]
+        world_data = [[int(line[0]), (float(line[1]), float(line[2]), float(line[3]))] for line in lines]
     print("### WORLD FILE LOADED")
     return world_data
 
@@ -67,7 +68,7 @@ def load_measurement(file_path):
         if line != '':
             split = line.split()
             # [curr_id, actual_id, (point_x, point_y))
-            points.append(SinglePoint(split[1], int(split[2]), (float(split[3]), float(split[4]))))
+            points.append(SinglePoint(int(split[1]), int(split[2]), (float(split[3]), float(split[4]))))
     """
         [
             seq,

@@ -68,9 +68,17 @@ def build_linear_system_projections(XR, XL, Zp, associations, kernel_threshold, 
     chi_tot = 0
     num_inliers = 0
 
+    associations = associations.astype(np.int32)
+
+    print("Zp associations XR XL", Zp.shape, associations.shape, XR.shape, XL.shape)
+    print("MIN MAX", min(associations[0, :]), max(associations[0, :]))
+    print("MIN MAX", min(associations[1, :]), max(associations[1, :]))
+
     for measurement_num in range(Zp.shape[1]):
         pose_index = associations[0, measurement_num]
-        landmark_index = associations[1, measurement_num]
+        landmark_index = associations[1, measurement_num] -1
+        # landmark_index = associations[1, measurement_num]
+        # print(pose_index, landmark_index)
         z = Zp[:, measurement_num]
         Xr = XR[:, :, pose_index]
         Xl = XL[:, landmark_index]
@@ -88,10 +96,20 @@ def build_linear_system_projections(XR, XL, Zp, associations, kernel_threshold, 
 
         chi_tot += chi
 
-        pose_matrix_idx = pose_matrix_index(pose_index, pose_dim)
-        landmark_matrix_idx = landmark_matrix_index(landmark_index, pose_dim, landmark_dim, num_poses)
+        pose_matrix_idx = pose_matrix_index(pose_index, pose_dim, num_poses)
+        landmark_matrix_idx = landmark_matrix_index(landmark_index, pose_dim, landmark_dim, num_poses, num_landmarks)
 
         # ===== H MATRIX =====
+        # print(pose_index, pose_dim)
+        # print(pose_matrix_idx, pose_dim)
+        # print(H[pose_matrix_idx:pose_matrix_idx + pose_dim,
+        #       pose_matrix_idx:pose_matrix_idx + pose_dim].shape)
+        # print((Jr.T @ Jr).shape)
+        print(landmark_index, landmark_matrix_idx, num_landmarks)
+        print(H[pose_matrix_idx:pose_matrix_idx + pose_dim,
+        landmark_matrix_idx:landmark_matrix_idx + landmark_dim].shape)
+        print((Jr.T @ Jl).shape)
+
         H[pose_matrix_idx:pose_matrix_idx + pose_dim,
         pose_matrix_idx:pose_matrix_idx + pose_dim] += Jr.T @ Jr
 

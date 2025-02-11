@@ -24,9 +24,9 @@ class SinglePoint:
     point = None
 
     def __init__(self, sequential_number, points_id_actual, point):
-        self.sequential_number = int(sequential_number)
-        self.points_id_actual = int(points_id_actual)
-        self.point = (float(point[0]), float(point[1]))
+        self.sequential_number = sequential_number
+        self.points_id_actual = points_id_actual
+        self.point = (point[0], point[1])
 
     def get_id_and_point(self):
         return self.points_id_actual, self.point
