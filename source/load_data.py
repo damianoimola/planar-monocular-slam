@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 
-from source.classes import Trajectory, Measurement, SinglePoint
+from classes import Trajectory, Measurement, SinglePoint
 
 
 def load_camera_file():

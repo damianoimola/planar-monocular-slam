@@ -2,6 +2,7 @@
 #   https://gitlab.com/grisetti/probabilistic_robotics_2024_25/-/blob/main/source/octave/25_multi_point_registration/multi_ICP_3d.m?ref_type=heads
 
 from utils import *
+from tqdm import tqdm
 
 from bundle_adjustment_lin_sys import build_linear_system_poses, build_linear_system_projections
 from bundle_adjustment_indices import landmark_matrix_index, pose_matrix_index
@@ -40,8 +41,8 @@ def do_bundle_adjustment(XR, XL, Zp, projection_associations,
     num_inliers_r = np.zeros((1, num_iterations))
 
     system_size = pose_dim * num_poses + landmark_dim * num_landmarks
-    for iteration in range(num_iterations):
-        print("# ITERATION", iteration)
+    for iteration in tqdm(range(num_iterations)):
+        # print("# ITERATION", iteration)
 
         H = np.zeros((system_size, system_size))
         b = np.zeros(system_size)

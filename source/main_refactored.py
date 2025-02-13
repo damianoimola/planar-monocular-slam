@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 from load_data import load_camera_file, load_trajectory_file, load_world_file, load_measurement_files
 from initialize_landmarks import initialize_landmarks
-from source.bundle_adjustment import do_bundle_adjustment
+from bundle_adjustment import do_bundle_adjustment
 from utils import *
 
 
@@ -86,37 +86,35 @@ class PlanarMonocularSLAM:
 
 
 
-
-        print("###############################################")
-        print("###    Preliminary Landmarks Optimization   ###")
-        print("###############################################")
-        num_iterations = 5
         damping = 1
         kernel_threshold = 1e3
-        block_poses = True
-        self.XR_guess, self.XL_guess, self.chi_stats_p, self.num_inliers_p, self.chi_stats_r, self.num_inliers_r, self.H, self.b =(
-            do_bundle_adjustment(self.XR_guess,
-                                self.XL_guess,
-                                self.Zp,
-                                self.projection_associations,
-                                self.Zr,
-                                num_iterations,
-                                damping,
-                                kernel_threshold,
-                                block_poses,
-                                self.num_poses,
-                                self.num_landmarks,
-                                self.pose_dim,
-                                self.landmark_dim,
-                                self.K, self.camera_transformation,
-                                self.z_near, self.z_far,
-                                self.image_rows, self.image_cols))
 
-        print(self.chi_stats_p.shape, self.num_inliers_p.shape, self.chi_stats_r.shape, self.num_inliers_r.shape)
-        print(self.chi_stats_p, self.num_inliers_p, self.chi_stats_r, self.num_inliers_r)
+        # print("###############################################")
+        # print("###    Preliminary Landmarks Optimization   ###")
+        # print("###############################################")
+        # num_iterations = 5
+        # block_poses = True
+        # self.XR_guess, self.XL_guess, self.chi_stats_p, self.num_inliers_p, self.chi_stats_r, self.num_inliers_r, self.H, self.b =(
+        #     do_bundle_adjustment(self.XR_guess,
+        #                         self.XL_guess,
+        #                         self.Zp,
+        #                         self.projection_associations,
+        #                         self.Zr,
+        #                         num_iterations,
+        #                         damping,
+        #                         kernel_threshold,
+        #                         block_poses,
+        #                         self.num_poses,
+        #                         self.num_landmarks,
+        #                         self.pose_dim,
+        #                         self.landmark_dim,
+        #                         self.K, self.camera_transformation,
+        #                         self.z_near, self.z_far,
+        #                         self.image_rows, self.image_cols))
+
 
         print("###############################################")
-        print("##########           LS            ############")
+        print("###                    LS                   ###")
         print("###############################################")
         num_iterations = 20
         block_poses = False
@@ -140,50 +138,57 @@ class PlanarMonocularSLAM:
         # Plot results
         plt.figure(1)
         plt.subplot(1, 2, 1)
-        plt.title("Poses Initial Guess")
-        plt.plot(self.XR_true[0, :], self.XR_true[1, :], 'b*', linewidth=2)
-        plt.plot(self.XR_guess[0, :], self.XR_guess[1, :], 'ro', linewidth=2)
-        plt.legend(["Poses True", "Guess"])
+        plt.title("Poses - Initial scenario")
+        plt.scatter(self.XR_true[0, :], self.XR_true[1, :], color="royalblue", marker='*')
+        plt.scatter(self.XR_guess[0, :], self.XR_guess[1, :], color="tomato")
+        plt.legend(["ground truth poses", "initial guess poses"])
         plt.grid()
 
         plt.subplot(1, 2, 2)
-        plt.title("Poses After Optimization")
-        plt.plot(self.XR_true[0, :], self.XR_true[1, :], 'b*', linewidth=2)
-        plt.plot(self.XR[0, :], self.XR[1, :], 'ro', linewidth=2)
-        plt.legend(["Poses True", "Guess"])
+        plt.title("Poses - After optimization")
+        plt.scatter(self.XR_true[0, :], self.XR_true[1, :], color="royalblue", marker='*')
+        plt.scatter(self.XR[0, :], self.XR[1, :], color="tomato")
+        plt.legend(["ground truth poses", "refined guess poses"])
         plt.grid()
+
+
 
         plt.figure(2)
         plt.subplot(2, 2, 1)
-        plt.title("Landmark Initial Guess")
-        plt.plot(self.XL_true[0, :], self.XL_true[1, :], 'b*', linewidth=2)
-        plt.plot(self.XL_guess[0, :], self.XL_guess[1, :], 'ro', linewidth=2)
-        plt.legend(["Landmark True", "Guess"])
+        plt.title("2D Landmarks - Initial scenario")
+        plt.scatter(self.XL_true[0, :], self.XL_true[1, :], color="royalblue", marker='*', s=2)
+        plt.scatter(self.XL_guess[0, :], self.XL_guess[1, :], color="tomato", marker='.',s=2)
+        plt.legend(["ground truth landmarks", "initial guess landmarks"])
         plt.grid()
 
         plt.subplot(2, 2, 2)
-        plt.title("Landmark After Optimization")
-        plt.plot(self.XL_true[0, :], self.XL_true[1, :], 'b*', linewidth=2)
-        plt.plot(self.XL[0, :], self.XL[1, :], 'ro', linewidth=2)
-        plt.legend(["Landmark True", "Guess"])
+        plt.title("2D Landmark - After optimization")
+        plt.scatter(self.XL_true[0, :], self.XL_true[1, :], color="royalblue", marker='*', s=2)
+        plt.scatter(self.XL[0, :], self.XL[1, :], color="tomato", marker='.', s=2)
+        plt.legend(["ground truth landmarks", "refined guess landmarks"])
         plt.grid()
 
         plt.subplot(2, 2, 3, projection='3d')
-        plt.title("Landmark Initial Guess")
-        plt.scatter(self.XL_true[0, :], self.XL_true[1, :], self.XL_true[2, :], c='b', marker='*')
-        plt.scatter(self.XL_guess[0, :], self.XL_guess[1, :], self.XL_guess[2, :], c='r', marker='o')
-        plt.legend(["Landmark True", "Guess"])
+        plt.title("3D Landmarks - Initial scenario")
+        plt.scatter(self.XL_true[0, :], self.XL_true[1, :], self.XL_true[2, :], color="royalblue", marker='*')
+        plt.scatter(self.XL_guess[0, :], self.XL_guess[1, :], self.XL_guess[2, :], color="tomato", marker='.')
+        plt.legend(["ground truth landmarks", "initial guess landmarks"])
         plt.grid()
 
         plt.subplot(2, 2, 4, projection='3d')
-        plt.title("Landmark After Optimization")
-        plt.scatter(self.XL_true[0, :], self.XL_true[1, :], self.XL_true[2, :], c='b', marker='*')
-        plt.scatter(self.XL[0, :], self.XL[1, :], self.XL[2, :], c='r', marker='o')
-        plt.legend(["Landmark True", "Guess"])
+        plt.title("3D Landmark - After optimization")
+        plt.scatter(self.XL_true[0, :], self.XL_true[1, :], self.XL_true[2, :], color="royalblue", marker='*')
+        plt.scatter(self.XL[0, :], self.XL[1, :], self.XL[2, :], color="tomato", marker='.')
+        plt.legend(["ground truth landmarks", "refined guess landmarks"])
         plt.grid()
 
+
+
+
+
+
         plt.figure(3)
-        plt.title("Chi Evolution")
+        # plt.title("Chi Evolution")
         plt.subplot(2, 2, 1)
         plt.plot(self.chi_stats_r, 'r-', linewidth=2)
         plt.legend(["Chi Poses"])
