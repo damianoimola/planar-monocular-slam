@@ -9,6 +9,14 @@ def v2t(v):
                   [0,  0,  1]])
     return M
 
+
+def t2v(M):
+    # translation components
+    x, y = M[0:2, 2]
+    # rotation angle
+    theta = np.arctan2(M[1, 0], M[0, 0])
+    return np.array([x, y, theta])
+
 def flatten_matrix_by_columns(M):
     # 3x3 homogeneous transformation matrix to 6d-vector
     v = np.zeros(6)
