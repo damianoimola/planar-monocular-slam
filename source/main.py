@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 from scipy.optimize import least_squares
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 
 from load_data import load_camera_file, load_trajectory_file, load_world_file, load_measurement_files
 

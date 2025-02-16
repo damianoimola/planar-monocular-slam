@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from bundle_adjustment import do_bundle_adjustment
-from initialize_landmarks import triangulate_landmarks
+from triangulate_landmarks import triangulate_landmarks
 from load_data import load_camera_file, load_trajectory_file, load_world_file, load_measurement_files
 from utils import *
 
