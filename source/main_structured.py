@@ -146,8 +146,6 @@ class PlanarMonocularSLAM:
         self.chi_stats_r = self.chi_stats_r.squeeze()
         self.num_inliers_r = self.num_inliers_r.squeeze()
 
-
-
     def plot(self):
         print("===== PLOTTING =====")
         def _plot_trajectory():
@@ -233,6 +231,165 @@ class PlanarMonocularSLAM:
         _plot_chi_and_inliers()
         plt.show()
 
+    def ba_rba_super_plot(self):
+        print("###############################################")
+        print("###            BUNDLE ADJUSTMENT            ###")
+        print("###############################################")
+        block_poses = False
+
+        self.XR_ba, self.XL_ba, self.chi_stats_p_ba, self.num_inliers_p_ba, self.chi_stats_r_ba, self.num_inliers_r_ba, self.H_ba, self.b_ba = do_bundle_adjustment(
+            self.XR_guess, self.XL_guess, self.Zp, self.projection_associations, self.Zr,
+            self.NUM_ITERATIONS, self.DAMPING, self.KERNEL_THRESHOLD, block_poses,
+            self.num_poses, self.num_landmarks, self.pose_dim, self.landmark_dim,
+            self.K, self.camera_transformation, self.z_near, self.z_far, self.image_rows, self.image_cols)
+
+        # suppressing useless dimension
+        self.chi_stats_p_ba = self.chi_stats_p_ba.squeeze()
+        self.num_inliers_p_ba = self.num_inliers_p_ba.squeeze()
+        self.chi_stats_r_ba = self.chi_stats_r_ba.squeeze()
+        self.num_inliers_r_ba = self.num_inliers_r_ba.squeeze()
+
+
+        print("###############################################")
+        print("###       (CAUCHY) BUNDLE ADJUSTMENT        ###")
+        print("###############################################")
+        block_poses = False
+        self.XR_cau, self.XL_cau, self.chi_stats_p_cau, self.num_inliers_p_cau, self.chi_stats_r_cau, self.num_inliers_r_cau, self.H_cau, self.b_cau = do_robust_bundle_adjustment(
+            self.XR_guess, self.XL_guess, self.Zp, self.projection_associations, self.Zr,
+            self.NUM_ITERATIONS, self.DAMPING, self.KERNEL_THRESHOLD, block_poses,
+            self.num_poses, self.num_landmarks, self.pose_dim, self.landmark_dim,
+            self.K, self.camera_transformation, self.z_near, self.z_far, self.image_rows, self.image_cols,
+            robust_method=RobustMethod.CAUCHY, robust_param=3.0)
+
+        # suppressing useless dimension
+        self.chi_stats_p_cau = self.chi_stats_p_cau.squeeze()
+        self.num_inliers_p_cau = self.num_inliers_p_cau.squeeze()
+        self.chi_stats_r_cau = self.chi_stats_r_cau.squeeze()
+        self.num_inliers_r_cau = self.num_inliers_r_cau.squeeze()
+
+
+        print("###############################################")
+        print("###       (HUBER) BUNDLE ADJUSTMENT         ###")
+        print("###############################################")
+        block_poses = False
+        self.XR_hu, self.XL_hu, self.chi_stats_p_hu, self.num_inliers_p_hu, self.chi_stats_r_hu, self.num_inliers_r_hu, self.H_hu, self.b_hu = do_robust_bundle_adjustment(
+            self.XR_guess, self.XL_guess, self.Zp, self.projection_associations, self.Zr,
+            self.NUM_ITERATIONS, self.DAMPING, self.KERNEL_THRESHOLD, block_poses,
+            self.num_poses, self.num_landmarks, self.pose_dim, self.landmark_dim,
+            self.K, self.camera_transformation, self.z_near, self.z_far, self.image_rows, self.image_cols,
+            robust_method=RobustMethod.HUBER, robust_param=1.0)
+
+        # suppressing useless dimension
+        self.chi_stats_p_hu = self.chi_stats_p_hu.squeeze()
+        self.num_inliers_p_hu = self.num_inliers_p_hu.squeeze()
+        self.chi_stats_r_hu = self.chi_stats_r_hu.squeeze()
+        self.num_inliers_r_hu = self.num_inliers_r_hu.squeeze()
+
+
+
+        print("###############################################")
+        print("###       (TUKEY) BUNDLE ADJUSTMENT         ###")
+        print("###############################################")
+        block_poses = False
+        self.XR_tu, self.XL_tu, self.chi_stats_p_tu, self.num_inliers_p_tu, self.chi_stats_r_tu, self.num_inliers_r_tu, self.H_tu, self.b_tu = do_robust_bundle_adjustment(
+            self.XR_guess, self.XL_guess, self.Zp, self.projection_associations, self.Zr,
+            self.NUM_ITERATIONS, self.DAMPING, self.KERNEL_THRESHOLD, block_poses,
+            self.num_poses, self.num_landmarks, self.pose_dim, self.landmark_dim,
+            self.K, self.camera_transformation, self.z_near, self.z_far, self.image_rows, self.image_cols,
+            robust_method=RobustMethod.TUKEY, robust_param=5.0)
+
+        # suppressing useless dimension
+        self.chi_stats_p_tu = self.chi_stats_p_tu.squeeze()
+        self.num_inliers_p_tu = self.num_inliers_p_tu.squeeze()
+        self.chi_stats_r_tu = self.chi_stats_r_tu.squeeze()
+        self.num_inliers_r_tu = self.num_inliers_r_tu.squeeze()
+
+        print("===== PLOTTING =====")
+
+        def _plot_trajectory():
+            plt.figure(1)
+            plt.subplot(1, 5, 1)
+            plt.title("Poses - Initial scenario")
+            plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
+            plt.scatter(self.XR_guess[0:1, 2:, :], self.XR_guess[1:2, 2:, :], color="tomato")
+            plt.legend(["ground truth poses", "initial guess poses"])
+            plt.grid(True)
+
+            plt.subplot(1, 5, 2)
+            plt.title("Poses - Bundle Adjustment")
+            plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
+            plt.scatter(self.XR_ba[0:1, 2:, :], self.XR_ba[1:2, 2:, :], color="tomato")
+            plt.legend(["ground truth poses", "refined guess poses"])
+            plt.grid(True)
+
+            plt.subplot(1, 5, 3)
+            plt.title("Poses - Bundle Adjustment (Huber, c=1.0)")
+            plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
+            plt.scatter(self.XR_hu[0:1, 2:, :], self.XR_hu[1:2, 2:, :], color="tomato")
+            plt.legend(["ground truth poses", "refined guess poses"])
+            plt.grid(True)
+
+            plt.subplot(1, 5, 4)
+            plt.title("Poses - Bundle Adjustment (Cauchy, c=3.0)")
+            plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
+            plt.scatter(self.XR_cau[0:1, 2:, :], self.XR_cau[1:2, 2:, :], color="tomato")
+            plt.legend(["ground truth poses", "refined guess poses"])
+            plt.grid(True)
+
+            plt.subplot(1, 5, 5)
+            plt.title("Poses - Bundle Adjustment (Tukey, c=5.0)")
+            plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
+            plt.scatter(self.XR_tu[0:1, 2:, :], self.XR_tu[1:2, 2:, :], color="tomato")
+            plt.legend(["ground truth poses", "refined guess poses"])
+            plt.grid(True)
+
+        def _plot_chi_and_inliers():
+            plt.figure(3)
+            # plt.title("Chi Evolution")
+            plt.subplot(2, 2, 1)
+            plt.title("Chi evolution - poses")
+            plt.plot(self.chi_stats_r_ba, linewidth=2)
+            plt.plot(self.chi_stats_r_hu, linewidth=2)
+            plt.plot(self.chi_stats_r_tu, linewidth=2)
+            plt.plot(self.chi_stats_r_cau, linewidth=2)
+            plt.legend(["classic BA", "robust - Huber", "robust - Tuckey", "robust - Cauchy"])
+            plt.grid(True)
+            plt.xlabel("Iterations")
+
+            plt.subplot(2, 2, 2)
+            plt.title("Inliers evolution - poses")
+            plt.plot(self.num_inliers_r_ba, linewidth=2)
+            plt.plot(self.num_inliers_r_hu, linewidth=2)
+            plt.plot(self.num_inliers_r_tu, linewidth=2)
+            plt.plot(self.num_inliers_r_cau, linewidth=2)
+            plt.legend(["classic BA", "robust - Huber", "robust - Tuckey", "robust - Cauchy"])
+            plt.grid(True)
+            plt.xlabel("Iterations")
+
+            plt.subplot(2, 2, 3)
+            plt.title("Chi evolution - projections")
+            plt.plot(self.chi_stats_p_ba, linewidth=2)
+            plt.plot(self.chi_stats_p_hu, linewidth=2)
+            plt.plot(self.chi_stats_p_tu, linewidth=2)
+            plt.plot(self.chi_stats_p_cau, linewidth=2)
+            plt.legend(["classic BA", "robust - Huber", "robust - Tuckey", "robust - Cauchy"])
+            plt.grid(True)
+            plt.xlabel("Iterations")
+
+            plt.subplot(2, 2, 4)
+            plt.title("Inliers evolution - Projections")
+            plt.plot(self.num_inliers_p_ba, color='hotpink', linewidth=2)
+            plt.plot(self.num_inliers_p_hu, color='hotpink', linewidth=2)
+            plt.plot(self.num_inliers_p_tu, color='hotpink', linewidth=2)
+            plt.plot(self.num_inliers_p_cau, color='hotpink', linewidth=2)
+            plt.legend(["classic BA", "robust - Huber", "robust - Tuckey", "robust - Cauchy"])
+            plt.grid(True)
+            plt.xlabel("Iterations")
+
+        plt.style.use('bmh')
+        _plot_trajectory()
+        _plot_chi_and_inliers()
+        plt.show()
 
 
 
@@ -240,5 +397,6 @@ pms = PlanarMonocularSLAM(damping=1, kernel_threshold=1e3, num_iterations=20)
 pms.read_data()
 pms.triangulate()
 # pms.ba()
-pms.rba(robust_method=RobustMethod.CAUCHY, robust_param=4.0)
-pms.plot()
+# pms.rba(robust_method=RobustMethod.CAUCHY, robust_param=4.0)
+# pms.plot()
+pms.ba_rba_super_plot()
