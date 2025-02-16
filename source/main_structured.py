@@ -8,6 +8,12 @@ from utils import *
 
 class PlanarMonocularSLAM:
     def __init__(self, damping=1, kernel_threshold=1e3, num_iterations=20):
+        self.DAMPING = damping
+        self.KERNEL_THRESHOLD = kernel_threshold
+        self.NUM_ITERATIONS = num_iterations
+
+
+    def read_data(self):
         print("===== READING DATA =====")
         # ===== CAMERA FILE =====
         self.K, self.camera_transformation, self.z_near, self.z_far, self.image_cols, self.image_rows = load_camera_file()
@@ -61,9 +67,7 @@ class PlanarMonocularSLAM:
         self.num_landmarks = len(self.id_landmarks)
         self.landmark_dim = 3
 
-
-
-
+    def triangulate(self):
         print("###############################################")
         print("###              TRIANGULATION              ###")
         print("###############################################")
@@ -80,36 +84,38 @@ class PlanarMonocularSLAM:
         self.num_landmarks = len(self.id_landmarks)
         self.id_landmarks = self.id_landmarks.reshape(1, -1)
 
-        # print("###############################################")
-        # print("###    Preliminary Landmarks Optimization   ###")
-        # print("###############################################")
-        # num_iterations = 5
-        # block_poses = True
-        # self.XR_guess, self.XL_guess, self.chi_stats_p, self.num_inliers_p, self.chi_stats_r, self.num_inliers_r, self.H, self.b =(
-        #     do_bundle_adjustment(self.XR_guess,
-        #                         self.XL_guess,
-        #                         self.Zp,
-        #                         self.projection_associations,
-        #                         self.Zr,
-        #                         num_iterations,
-        #                         damping,
-        #                         kernel_threshold,
-        #                         block_poses,
-        #                         self.num_poses,
-        #                         self.num_landmarks,
-        #                         self.pose_dim,
-        #                         self.landmark_dim,
-        #                         self.K, self.camera_transformation,
-        #                         self.z_near, self.z_far,
-        #                         self.image_rows, self.image_cols))
+    def pre_optimization(self):
+        print("###############################################")
+        print("###    Preliminary Landmarks Optimization   ###")
+        print("###############################################")
+        num_iterations = 5
+        block_poses = True
+        self.XR_guess, self.XL_guess, self.chi_stats_p, self.num_inliers_p, self.chi_stats_r, self.num_inliers_r, self.H, self.b =(
+            do_bundle_adjustment(self.XR_guess,
+                                self.XL_guess,
+                                self.Zp,
+                                self.projection_associations,
+                                self.Zr,
+                                num_iterations,
+                                self.DAMPING,
+                                self.KERNEL_THRESHOLD,
+                                block_poses,
+                                self.num_poses,
+                                self.num_landmarks,
+                                self.pose_dim,
+                                self.landmark_dim,
+                                self.K, self.camera_transformation,
+                                self.z_near, self.z_far,
+                                self.image_rows, self.image_cols))
 
-
+    def ba(self):
         print("###############################################")
         print("###            BUNDLE ADJUSTMENT            ###")
         print("###############################################")
         block_poses = False
         self.XR, self.XL, self.chi_stats_p, self.num_inliers_p, self.chi_stats_r, self.num_inliers_r, self.H, self.b = do_bundle_adjustment(
-            self.XR_guess, self.XL_guess, self.Zp, self.projection_associations, self.Zr, num_iterations, damping, kernel_threshold, block_poses,
+            self.XR_guess, self.XL_guess, self.Zp, self.projection_associations, self.Zr,
+            self.NUM_ITERATIONS, self.DAMPING, self.KERNEL_THRESHOLD, block_poses,
             self.num_poses, self.num_landmarks, self.pose_dim, self.landmark_dim,
             self.K, self.camera_transformation, self.z_near, self.z_far, self.image_rows, self.image_cols)
 
@@ -120,11 +126,7 @@ class PlanarMonocularSLAM:
         self.chi_stats_r = self.chi_stats_r.squeeze()
         self.num_inliers_r = self.num_inliers_r.squeeze()
 
-        # print(self.chi_stats_p.shape, self.num_inliers_p.shape, self.chi_stats_r.shape, self.num_inliers_r.shape)
-        # print(self.chi_stats_p, self.num_inliers_p, self.chi_stats_r, self.num_inliers_r)
-
-
-
+    def plot(self):
         print("===== PLOTTING =====")
         # Plot results
         plt.figure(1)
@@ -213,5 +215,8 @@ class PlanarMonocularSLAM:
 
 
 
-
 pms = PlanarMonocularSLAM()
+pms.read_data()
+pms.triangulate()
+pms.ba()
+pms.plot()
