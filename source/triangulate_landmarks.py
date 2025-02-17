@@ -24,14 +24,17 @@ def direction_from_img_coordinates(img_coord, invK):
 
 
 def triangulate_multiple_views(points, directions):
-    """best estimate of landmark position given multiple camera observations"""
+    """best estimate of landmark position given multiple camera observations
+    """
     A = np.zeros((3, 3))
     B = np.zeros((3, 1))
 
+    # looping over ray observations
     for i in range(points.shape[1]):
         a, b, c = directions[:, i]
         x, y, z = points[:, i]
 
+        # building matrix A
         A[0, 0] += 1 - a * a
         A[0, 1] += -a * b
         A[0, 2] += -a * c
@@ -39,14 +42,17 @@ def triangulate_multiple_views(points, directions):
         A[1, 2] += -b * c
         A[2, 2] += 1 - c * c
 
+        # building vector B
         B[0, 0] += (1 - a * a) * x - a * b * y - a * c * z
         B[1, 0] += -a * b * x + (1 - b * b) * y - b * c * z
         B[2, 0] += -a * c * x - b * c * y + (1 - c * c) * z
 
+    # symmetry adjustments
     A[1, 0] = A[0, 1]
     A[2, 0] = A[0, 2]
     A[2, 1] = A[1, 2]
 
+    # this is the equivalent of minimizing the sum of squared perpendicular distances
     P = np.linalg.solve(A, B)
     return P.flatten()
 

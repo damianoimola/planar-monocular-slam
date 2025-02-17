@@ -438,25 +438,46 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("main")
     # general
     parser.add_argument(
-        "-k",
-        "--kind",
-        help="A string indicating which kind of run we want to perform: BA, RBA or COMPARISON",
+        "-k", "--kind",
+        help="A string indicating which kind of run we want to perform: BA (Bundle Adjustment), RBA (Robust Bundle Adjustment) or COMPARISON (BA + every RBA)",
         choices=["BA", "RBA", "COMPARISON"],
         type=str,
         default="BA")
 
+    parser.add_argument(
+        "-i", "--iterations",
+        help="An integer indicating the number of iteration that BA/RBA must perform",
+        type=int,
+        default=20)
+
+    parser.add_argument(
+        "-d", "--damping",
+        help="An float number indicating the damping factor of the BA/RBA",
+        type=float,
+        default=1.0)
+
+    parser.add_argument(
+        "-t", "--threshold",
+        help="An float number indicating the inlier kernel threshold for BA/RBA",
+        type=float,
+        default=1e3)
+
+    parser.add_argument(
+        "-o", "--optimize",
+        help="A boolean indicating if you want to perform an 'only-landmark' pre optimization, so to enhance the initial guess.",
+        type=bool,
+        default=False)
+
     # rba
     parser.add_argument(
-        "-m",
-        "--method",
-        help="[Only for RBA] A string indicating the specific robustifier to use: CAUCHY, HUBER, TUKEY",
-        choices=["CAUCHY", "HUBER", "TUKEY"],
+        "-m", "--method",
+        help="[Only for RBA] A string indicating the specific robustifier to use: CAUCHY, HUBER, TUKEY, and NONE (NONE=>BA)",
+        choices=["CAUCHY", "HUBER", "TUKEY", "NONE"],
         type=str,
         default="HUBER")
 
     parser.add_argument(
-        "-p",
-        "--param",
+        "-p", "--param",
         help="[Only for RBA] A float indicating the specific value for the related robustifier",
         type=float,
         default=1.0)
@@ -466,21 +487,27 @@ if __name__ == "__main__":
 
     print("ARGUMENTS", args)
 
-    pms = PlanarMonocularSLAM(damping=1, kernel_threshold=1e3, num_iterations=20)
+    pms = PlanarMonocularSLAM(damping=args.damping, kernel_threshold=args.threshold, num_iterations=args.iterations)
     pms.read_data()
 
     # ===== TRIANGULATION =====
     pms.triangulate()
 
     if args.kind == "BA":
+        if args.optimize:
+            pms.pre_optimization()
         # ===== BUNDLE ADJUSTMENT (~1 min) =====
         pms.ba()
         pms.plot()
     elif args.kind == "RBA":
+        if args.optimize:
+            pms.pre_optimization()
         # ===== ROBUST BUNDLE ADJUSTMENT  (~1 min) =====
         pms.rba(robust_method=retrieve_method(args.method), robust_param=args.param)
         pms.plot()
     elif args.kind == "COMPARISON":
+        if args.optimize:
+            pms.pre_optimization()
         # ===== BUNDLE ADJUSTMENT + ROBUST BUNDLE ADJUSTMENTS + PLOT  (~4.5 min) =====
         pms.comparison()
     else:
