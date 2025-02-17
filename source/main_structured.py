@@ -308,36 +308,42 @@ class PlanarMonocularSLAM:
 
         def _plot_trajectory():
             plt.figure(1)
+            plt.subplots_adjust(top=0.88,
+                                bottom=0.11,
+                                left=0.02,
+                                right=0.98,
+                                hspace=0.2,
+                                wspace=0.2)
             plt.subplot(1, 5, 1)
-            plt.title("Poses - Initial scenario")
+            plt.title("Poses \n Initial scenario")
             plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
             plt.scatter(self.XR_guess[0:1, 2:, :], self.XR_guess[1:2, 2:, :], color="tomato")
             plt.legend(["ground truth poses", "initial guess poses"])
             plt.grid(True)
 
             plt.subplot(1, 5, 2)
-            plt.title("Poses - Bundle Adjustment")
+            plt.title("Poses \n Bundle Adjustment")
             plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
             plt.scatter(self.XR_ba[0:1, 2:, :], self.XR_ba[1:2, 2:, :], color="tomato")
             plt.legend(["ground truth poses", "refined guess poses"])
             plt.grid(True)
 
             plt.subplot(1, 5, 3)
-            plt.title("Poses - Bundle Adjustment (Huber, c=1.0)")
+            plt.title("Poses \n Bundle Adjustment (Huber, c=1.0)")
             plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
             plt.scatter(self.XR_hu[0:1, 2:, :], self.XR_hu[1:2, 2:, :], color="tomato")
             plt.legend(["ground truth poses", "refined guess poses"])
             plt.grid(True)
 
             plt.subplot(1, 5, 4)
-            plt.title("Poses - Bundle Adjustment (Cauchy, c=3.0)")
+            plt.title("Poses \n Bundle Adjustment (Cauchy, c=3.0)")
             plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
             plt.scatter(self.XR_cau[0:1, 2:, :], self.XR_cau[1:2, 2:, :], color="tomato")
             plt.legend(["ground truth poses", "refined guess poses"])
             plt.grid(True)
 
             plt.subplot(1, 5, 5)
-            plt.title("Poses - Bundle Adjustment (Tukey, c=5.0)")
+            plt.title("Poses \n Bundle Adjustment (Tukey, c=5.0)")
             plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
             plt.scatter(self.XR_tu[0:1, 2:, :], self.XR_tu[1:2, 2:, :], color="tomato")
             plt.legend(["ground truth poses", "refined guess poses"])
@@ -345,50 +351,71 @@ class PlanarMonocularSLAM:
 
         def _plot_chi_and_inliers():
             plt.figure(3)
-            # plt.title("Chi Evolution")
+            plt.subplots_adjust(top=0.95,
+                                bottom=0.05,
+                                left=0.02,
+                                right=0.98,
+                                hspace=0.28,
+                                wspace=0.1)
             plt.subplot(2, 2, 1)
-            plt.title("Chi evolution - poses")
+            plt.title("Chi evolution \n Poses")
             plt.plot(self.chi_stats_r_ba, linewidth=2)
             plt.plot(self.chi_stats_r_hu, linewidth=2)
             plt.plot(self.chi_stats_r_tu, linewidth=2)
             plt.plot(self.chi_stats_r_cau, linewidth=2)
-            plt.legend(["classic BA", "robust - Huber", "robust - Tuckey", "robust - Cauchy"])
+            plt.legend(["classic BA", "robust - Huber", "robust - Tukey", "robust - Cauchy"])
             plt.grid(True)
             plt.xlabel("Iterations")
 
             plt.subplot(2, 2, 2)
-            plt.title("Inliers evolution - poses")
+            plt.title("Inliers evolution \n Poses")
             plt.plot(self.num_inliers_r_ba, linewidth=2)
             plt.plot(self.num_inliers_r_hu, linewidth=2)
             plt.plot(self.num_inliers_r_tu, linewidth=2)
             plt.plot(self.num_inliers_r_cau, linewidth=2)
-            plt.legend(["classic BA", "robust - Huber", "robust - Tuckey", "robust - Cauchy"])
+            plt.legend(["classic BA", "robust - Huber", "robust - Tukey", "robust - Cauchy"])
             plt.grid(True)
             plt.xlabel("Iterations")
 
             plt.subplot(2, 2, 3)
-            plt.title("Chi evolution - projections")
+            plt.title("Chi evolution \n Projections")
             plt.plot(self.chi_stats_p_ba, linewidth=2)
             plt.plot(self.chi_stats_p_hu, linewidth=2)
             plt.plot(self.chi_stats_p_tu, linewidth=2)
             plt.plot(self.chi_stats_p_cau, linewidth=2)
-            plt.legend(["classic BA", "robust - Huber", "robust - Tuckey", "robust - Cauchy"])
+            plt.legend(["classic BA", "robust - Huber", "robust - Tukey", "robust - Cauchy"])
             plt.grid(True)
             plt.xlabel("Iterations")
 
             plt.subplot(2, 2, 4)
-            plt.title("Inliers evolution - Projections")
-            plt.plot(self.num_inliers_p_ba, color='hotpink', linewidth=2)
-            plt.plot(self.num_inliers_p_hu, color='hotpink', linewidth=2)
-            plt.plot(self.num_inliers_p_tu, color='hotpink', linewidth=2)
-            plt.plot(self.num_inliers_p_cau, color='hotpink', linewidth=2)
-            plt.legend(["classic BA", "robust - Huber", "robust - Tuckey", "robust - Cauchy"])
+            plt.title("Inliers evolution \n Projections")
+            plt.plot(self.num_inliers_p_ba, linewidth=2)
+            plt.plot(self.num_inliers_p_hu, linewidth=2)
+            plt.plot(self.num_inliers_p_tu, linewidth=2)
+            plt.plot(self.num_inliers_p_cau, linewidth=2)
+            plt.legend(["classic BA", "robust - Huber", "robust - Tukey", "robust - Cauchy"])
             plt.grid(True)
             plt.xlabel("Iterations")
 
         plt.style.use('bmh')
         _plot_trajectory()
+        """
+        top=0.88,
+        bottom=0.11,
+        left=0.02,
+        right=0.98,
+        hspace=0.2,
+        wspace=0.2
+        """
         _plot_chi_and_inliers()
+        """
+        top=0.95,
+        bottom=0.05,
+        left=0.02,
+        right=0.98,
+        hspace=0.28,
+        wspace=0.1
+        """
         plt.show()
 
 
@@ -396,7 +423,14 @@ class PlanarMonocularSLAM:
 pms = PlanarMonocularSLAM(damping=1, kernel_threshold=1e3, num_iterations=20)
 pms.read_data()
 pms.triangulate()
+
+# ===== BUNDLE ADJUSTMENT (~1 min) =====
 # pms.ba()
+# pms.plot()
+
+# ===== ROBUST BUNDLE ADJUSTMENT  (~1 min) =====
 # pms.rba(robust_method=RobustMethod.CAUCHY, robust_param=4.0)
 # pms.plot()
+
+# ===== BUNDLE ADJUSTMENT + ROBUST BUNDLE ADJUSTMENTS + PLOT  (~4.5 min) =====
 pms.ba_rba_super_plot()
