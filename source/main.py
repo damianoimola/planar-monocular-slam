@@ -69,6 +69,7 @@ class PlanarMonocularSLAM:
         self.num_landmarks = len(self.id_landmarks)
         self.landmark_dim = 3
 
+    # ===== TRIANGULATION =====
     def triangulate(self):
         print("###############################################")
         print("###              TRIANGULATION              ###")
@@ -86,6 +87,7 @@ class PlanarMonocularSLAM:
         self.num_landmarks = len(self.id_landmarks)
         self.id_landmarks = self.id_landmarks.reshape(1, -1)
 
+    # ===== PRE OPTIMIZATION (ONLY-LANDMARKS BA)  (~20 sec)=====
     def pre_optimization(self):
         print("###############################################")
         print("###    Preliminary Landmarks Optimization   ###")
@@ -110,6 +112,7 @@ class PlanarMonocularSLAM:
                                 self.z_near, self.z_far,
                                 self.image_rows, self.image_cols))
 
+    # ===== ROBUST BUNDLE ADJUSTMENT  (~1 min) =====
     def rba(self, robust_method=RobustMethod.HUBER, robust_param=1.0):
         print("###############################################")
         print("###        ROBUST BUNDLE ADJUSTMENT         ###")
@@ -128,6 +131,7 @@ class PlanarMonocularSLAM:
         self.chi_stats_r = self.chi_stats_r.squeeze()
         self.num_inliers_r = self.num_inliers_r.squeeze()
 
+    # ===== BUNDLE ADJUSTMENT  (~1 min) =====
     def ba(self):
         print("###############################################")
         print("###            BUNDLE ADJUSTMENT            ###")
@@ -146,6 +150,7 @@ class PlanarMonocularSLAM:
         self.chi_stats_r = self.chi_stats_r.squeeze()
         self.num_inliers_r = self.num_inliers_r.squeeze()
 
+    # ===== PLOTTING =====
     def plot(self):
         print("===== PLOTTING =====")
         def _plot_trajectory():
@@ -231,6 +236,7 @@ class PlanarMonocularSLAM:
         _plot_chi_and_inliers()
         plt.show()
 
+    # ===== BUNDLE ADJUSTMENT + ROBUST BUNDLE ADJUSTMENTS + PLOT  (~4.5 min) =====
     def ba_rba_super_plot(self):
         print("###############################################")
         print("###            BUNDLE ADJUSTMENT            ###")
@@ -422,6 +428,8 @@ class PlanarMonocularSLAM:
 
 pms = PlanarMonocularSLAM(damping=1, kernel_threshold=1e3, num_iterations=20)
 pms.read_data()
+
+# ===== TRIANGULATION =====
 pms.triangulate()
 
 # ===== BUNDLE ADJUSTMENT (~1 min) =====
