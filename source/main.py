@@ -1,4 +1,6 @@
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
+import argparse
 
 from bundle_adjustment import do_bundle_adjustment
 from robust_bundle_adjustment import do_robust_bundle_adjustment
@@ -237,7 +239,7 @@ class PlanarMonocularSLAM:
         plt.show()
 
     # ===== BUNDLE ADJUSTMENT + ROBUST BUNDLE ADJUSTMENTS + PLOT  (~4.5 min) =====
-    def ba_rba_super_plot(self):
+    def comparison(self):
         print("###############################################")
         print("###            BUNDLE ADJUSTMENT            ###")
         print("###############################################")
@@ -314,46 +316,57 @@ class PlanarMonocularSLAM:
 
         def _plot_trajectory():
             plt.figure(1)
-            plt.subplots_adjust(top=0.88,
-                                bottom=0.11,
-                                left=0.02,
-                                right=0.98,
+
+            plt.subplots_adjust(top=0.95,
+                                bottom=0.05,
+                                left=0.05,
+                                right=0.95,
                                 hspace=0.2,
                                 wspace=0.2)
-            plt.subplot(1, 5, 1)
-            plt.title("Poses \n Initial scenario")
-            plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
-            plt.scatter(self.XR_guess[0:1, 2:, :], self.XR_guess[1:2, 2:, :], color="tomato")
-            plt.legend(["ground truth poses", "initial guess poses"])
-            plt.grid(True)
 
-            plt.subplot(1, 5, 2)
-            plt.title("Poses \n Bundle Adjustment")
-            plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
-            plt.scatter(self.XR_ba[0:1, 2:, :], self.XR_ba[1:2, 2:, :], color="tomato")
-            plt.legend(["ground truth poses", "refined guess poses"])
-            plt.grid(True)
+            fig = plt.gcf()
 
-            plt.subplot(1, 5, 3)
-            plt.title("Poses \n Bundle Adjustment (Huber, c=1.0)")
-            plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
-            plt.scatter(self.XR_hu[0:1, 2:, :], self.XR_hu[1:2, 2:, :], color="tomato")
-            plt.legend(["ground truth poses", "refined guess poses"])
-            plt.grid(True)
+            gs = gridspec.GridSpec(nrows=3, ncols=4, figure=fig)
 
-            plt.subplot(1, 5, 4)
-            plt.title("Poses \n Bundle Adjustment (Cauchy, c=3.0)")
-            plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
-            plt.scatter(self.XR_cau[0:1, 2:, :], self.XR_cau[1:2, 2:, :], color="tomato")
-            plt.legend(["ground truth poses", "refined guess poses"])
-            plt.grid(True)
+            ax1 = fig.add_subplot(gs[0, 1:3])
+            ax1.set_title("Poses\nInitial scenario", fontsize=10)
+            ax1.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
+            ax1.scatter(self.XR_guess[0:1, 2:, :], self.XR_guess[1:2, 2:, :], color="tomato")
+            ax1.legend(["ground truth poses", "initial guess poses"])
+            ax1.grid(True)
 
-            plt.subplot(1, 5, 5)
-            plt.title("Poses \n Bundle Adjustment (Tukey, c=5.0)")
-            plt.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
-            plt.scatter(self.XR_tu[0:1, 2:, :], self.XR_tu[1:2, 2:, :], color="tomato")
-            plt.legend(["ground truth poses", "refined guess poses"])
-            plt.grid(True)
+
+
+            ax2 = fig.add_subplot(gs[1, 0:2])
+            ax2.set_title("Poses\nBundle Adjustment", fontsize=10)
+            ax2.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
+            ax2.scatter(self.XR_ba[0:1, 2:, :], self.XR_ba[1:2, 2:, :], color="tomato")
+            ax2.legend(["ground truth poses", "refined guess poses"])
+            ax2.grid(True)
+
+
+            ax3 = fig.add_subplot(gs[1, 2:4])
+            ax3.set_title("Poses\nBundle Adjustment (Huber, c=1.0)", fontsize=10)
+            ax3.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
+            ax3.scatter(self.XR_hu[0:1, 2:, :], self.XR_hu[1:2, 2:, :], color="tomato")
+            ax3.legend(["ground truth poses", "refined guess poses"])
+            ax3.grid(True)
+
+
+            ax4 = fig.add_subplot(gs[2, 0:2])
+            ax4.set_title("Poses\nBundle Adjustment (Cauchy, c=3.0)", fontsize=10)
+            ax4.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
+            ax4.scatter(self.XR_cau[0:1, 2:, :], self.XR_cau[1:2, 2:, :], color="tomato")
+            ax4.legend(["ground truth poses", "refined guess poses"])
+            ax4.grid(True)
+
+
+            ax5 = fig.add_subplot(gs[2, 2:4])
+            ax5.set_title("Poses\nBundle Adjustment (Tukey, c=5.0)", fontsize=10)
+            ax5.scatter(self.XR_true[0:1, 2:, :], self.XR_true[1:2, 2:, :], color="royalblue", marker='*')
+            ax5.scatter(self.XR_tu[0:1, 2:, :], self.XR_tu[1:2, 2:, :], color="tomato")
+            ax5.legend(["ground truth poses", "refined guess poses"])
+            ax5.grid(True)
 
         def _plot_chi_and_inliers():
             plt.figure(3)
@@ -363,8 +376,9 @@ class PlanarMonocularSLAM:
                                 right=0.98,
                                 hspace=0.28,
                                 wspace=0.1)
+
             plt.subplot(2, 2, 1)
-            plt.title("Chi evolution \n Poses")
+            plt.title("Chi evolution\nPoses")
             plt.plot(self.chi_stats_r_ba, linewidth=2)
             plt.plot(self.chi_stats_r_hu, linewidth=2)
             plt.plot(self.chi_stats_r_tu, linewidth=2)
@@ -374,7 +388,7 @@ class PlanarMonocularSLAM:
             plt.xlabel("Iterations")
 
             plt.subplot(2, 2, 2)
-            plt.title("Inliers evolution \n Poses")
+            plt.title("Inliers evolution\nPoses")
             plt.plot(self.num_inliers_r_ba, linewidth=2)
             plt.plot(self.num_inliers_r_hu, linewidth=2)
             plt.plot(self.num_inliers_r_tu, linewidth=2)
@@ -384,7 +398,7 @@ class PlanarMonocularSLAM:
             plt.xlabel("Iterations")
 
             plt.subplot(2, 2, 3)
-            plt.title("Chi evolution \n Projections")
+            plt.title("Chi evolution\nProjections")
             plt.plot(self.chi_stats_p_ba, linewidth=2)
             plt.plot(self.chi_stats_p_hu, linewidth=2)
             plt.plot(self.chi_stats_p_tu, linewidth=2)
@@ -394,7 +408,7 @@ class PlanarMonocularSLAM:
             plt.xlabel("Iterations")
 
             plt.subplot(2, 2, 4)
-            plt.title("Inliers evolution \n Projections")
+            plt.title("Inliers evolution\nProjections")
             plt.plot(self.num_inliers_p_ba, linewidth=2)
             plt.plot(self.num_inliers_p_hu, linewidth=2)
             plt.plot(self.num_inliers_p_tu, linewidth=2)
@@ -405,40 +419,69 @@ class PlanarMonocularSLAM:
 
         plt.style.use('bmh')
         _plot_trajectory()
-        """
-        top=0.88,
-        bottom=0.11,
-        left=0.02,
-        right=0.98,
-        hspace=0.2,
-        wspace=0.2
-        """
         _plot_chi_and_inliers()
-        """
-        top=0.95,
-        bottom=0.05,
-        left=0.02,
-        right=0.98,
-        hspace=0.28,
-        wspace=0.1
-        """
         plt.show()
 
 
+def retrieve_method(arg):
+    if arg == "CAUCHY":
+        return RobustMethod.CAUCHY
+    elif arg == "HUBER":
+        return RobustMethod.HUBER
+    elif arg == "TUKEY":
+        return RobustMethod.TUKEY
+    else:
+        return RobustMethod.NONE
 
-pms = PlanarMonocularSLAM(damping=1, kernel_threshold=1e3, num_iterations=20)
-pms.read_data()
 
-# ===== TRIANGULATION =====
-pms.triangulate()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser("main")
+    # general
+    parser.add_argument(
+        "-k",
+        "--kind",
+        help="A string indicating which kind of run we want to perform: BA, RBA or COMPARISON",
+        choices=["BA", "RBA", "COMPARISON"],
+        type=str,
+        default="BA")
 
-# ===== BUNDLE ADJUSTMENT (~1 min) =====
-# pms.ba()
-# pms.plot()
+    # rba
+    parser.add_argument(
+        "-m",
+        "--method",
+        help="[Only for RBA] A string indicating the specific robustifier to use: CAUCHY, HUBER, TUKEY",
+        choices=["CAUCHY", "HUBER", "TUKEY"],
+        type=str,
+        default="HUBER")
 
-# ===== ROBUST BUNDLE ADJUSTMENT  (~1 min) =====
-# pms.rba(robust_method=RobustMethod.CAUCHY, robust_param=4.0)
-# pms.plot()
+    parser.add_argument(
+        "-p",
+        "--param",
+        help="[Only for RBA] A float indicating the specific value for the related robustifier",
+        type=float,
+        default=1.0)
 
-# ===== BUNDLE ADJUSTMENT + ROBUST BUNDLE ADJUSTMENTS + PLOT  (~4.5 min) =====
-pms.ba_rba_super_plot()
+    # comparison
+    args = parser.parse_args()
+
+    print("ARGUMENTS", args)
+
+    pms = PlanarMonocularSLAM(damping=1, kernel_threshold=1e3, num_iterations=20)
+    pms.read_data()
+
+    # ===== TRIANGULATION =====
+    pms.triangulate()
+
+    if args.kind == "BA":
+        # ===== BUNDLE ADJUSTMENT (~1 min) =====
+        pms.ba()
+        pms.plot()
+    elif args.kind == "RBA":
+        # ===== ROBUST BUNDLE ADJUSTMENT  (~1 min) =====
+        pms.rba(robust_method=retrieve_method(args.method), robust_param=args.param)
+        pms.plot()
+    elif args.kind == "COMPARISON":
+        # ===== BUNDLE ADJUSTMENT + ROBUST BUNDLE ADJUSTMENTS + PLOT  (~4.5 min) =====
+        pms.comparison()
+    else:
+        print("[ERR] Wrong argument for 'kind'")
