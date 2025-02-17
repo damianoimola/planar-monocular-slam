@@ -17,14 +17,15 @@ def t2v(M):
     theta = np.arctan2(M[1, 0], M[0, 0])
     return np.array([x, y, theta])
 
+
 def flatten_matrix_by_columns(M):
     # 3x3 homogeneous transformation matrix to 6d-vector
     v = np.zeros(6)
     v[0:2] = M[:2, 0]
     v[2:4] = M[:2, 1]
-    # v[:4] = M[:2, :2].flatten(order='F')  # Column-wise flattening
     v[4:6] = M[:2, 2]
     return v
+
 
 def skew(v):
     return np.array([[0, -v[2], v[1]],
